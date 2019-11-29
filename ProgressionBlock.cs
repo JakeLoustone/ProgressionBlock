@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace Oxide.Plugins
 {
-    [Info("Progression Block", "Jake Loustone", "0.0.1")]
+    [Info("Progression Block", "Jake Loustone", "0.0.2")]
     [Description("Blocks researching higher tier blueprints.")]
     public class ProgressionBlock : RustPlugin
     {
@@ -16,6 +19,8 @@ namespace Oxide.Plugins
         {
             CheckBlueprints();
         }
+
+        #region Helper Functions
 
         private void CheckBlueprints()
         {
@@ -42,14 +47,14 @@ namespace Oxide.Plugins
                 }
             }
         }
+        #endregion
 
-        //config.serverTierLevel
         #region Commands
 
         [ChatCommand("setservertier")]
         void SetServerTier(BasePlayer player, string command, string[] arguments)
         {
-            if (permission.UserHasPermission(player.UserIDString, RLAdmin))
+            if (permission.UserHasPermission(player.UserIDString, PBAdmin))
             {
                 int tempInt = 1;
 
@@ -75,7 +80,7 @@ namespace Oxide.Plugins
 
             int tempInt = 1;
 
-            int.TryParse(arguments[0], out tempInt);
+            int.TryParse(arg.Args[0], out tempInt);
 
             if (tempInt < 1 || tempInt > 3)
             {
@@ -122,6 +127,18 @@ namespace Oxide.Plugins
             return false;
         }
 
+        private object CanExperiment(BasePlayer player, Workbench workbench)
+        {
+            if (config.serverTierLevel >= workbench.Workbenchlevel)
+            {
+                return null;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         #endregion
 
         #region Config
@@ -149,6 +166,14 @@ namespace Oxide.Plugins
             try
             {
                 config = Config.ReadObject<ConfigData>();
+
+                if (config.serverTierLevel != 1 &&
+                    config.serverTierLevel != 2 &&
+                    config.serverTierLevel != 3)
+                {
+                    throw new Exception();
+                }
+
             }
             catch
             {
